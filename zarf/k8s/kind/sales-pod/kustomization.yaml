@@ -8,4 +8,4 @@ patchesStrategicMerge:
 images:
 - name: sales-api-image
   newName: sales-api-amd64
-  newTag: "1.4"
+  newTag: "1.0"
