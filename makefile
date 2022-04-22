@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 run:
-	go run main.go
+	go run app/services/sales-api/main.go |  go run app/services/tooling/logfmt/main.go
 
 # ==============================================================================
 # Building containers
@@ -45,7 +45,7 @@ kind-apply:
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
 
 kind-logs:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 |  go run app/services/tooling/logfmt/main.go
 
 kind-update: all kind-load kind-restart
 
