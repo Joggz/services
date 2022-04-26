@@ -7,8 +7,8 @@ COPY . /service
 
 # Build the service binary.
 WORKDIR /service/app/services/sales-api
-RUN go build -o sales-api -ldflags "-X http://main.build=${BUILD_REF}"
-# RUN go build -ldflags "-X main.build=${BUILD_REF}"
+# RUN go build -o sales-api -ldflags "-X http://main.build=${BUILD_REF}"
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 
 # Run the Go Binary in Alpine.
