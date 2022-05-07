@@ -59,6 +59,8 @@ kind-update: all kind-load kind-restart
 kind-restart:
 	kubectl rollout restart deployment sales-pod 
 
+kind-update-apply: all kind-load kind-apply
+
 kind-status-sales:
 	kubectl get pods -o wide --watch --all-namespaces
 # build:
