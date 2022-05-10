@@ -2,8 +2,8 @@
 package web
 
 import (
-	// "context"
-	// "net/http"
+	"context"
+	"net/http"
 	"os"
 	"syscall"
 	// "time"
@@ -24,6 +24,10 @@ type App struct {
 	shutdown chan os.Signal
 }
 
+// A Handler is a type that handles a http request within our own little mini
+// framework.
+type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
+
 
 // NewApp creates an App value that handle a set of routes for the application.
 func NewApp(shutdown chan os.Signal) *App{
@@ -37,4 +41,27 @@ func NewApp(shutdown chan os.Signal) *App{
 // issue is identified.
 func (a *App) SignalShutdown() {
 	a.shutdown <- syscall.SIGTERM
+}
+
+
+// Handle sets a handler function for a given HTTP method and path pair
+// to the application server mux.
+func (a *App) Handle(method string, group string, path string, handler Handler) {
+
+	// run some code before
+	h := func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context();
+		
+		if err := handler(ctx, w, r) ; err != nil {
+			// Erro Handling
+			return
+		}
+	
+	}
+		// run some code after api call 
+		finalPath := path
+		if group != "" {
+			finalPath = "/" + group + path
+		}
+		a.ContextMux.Handle(method, finalPath, h)
 }
