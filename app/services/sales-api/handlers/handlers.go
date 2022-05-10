@@ -65,11 +65,18 @@ type APIMuxConfig struct {
 func APIMux(cfg APIMuxConfig, log *zap.SugaredLogger ) *web.App  {
 	app := web.NewApp(cfg.Shutdown)
 
-	tgh :=  testgrp.Handlers{
-		Log: log,
-	}
-
-	app.Handle(http.MethodGet, "/v1/test", tgh.Test)
+	v1(app, cfg)
 	
 	return app
+}
+
+
+func v1(app *web.App, cfg APIMuxConfig) {
+	const version = "v1";
+
+	tgh :=  testgrp.Handlers{
+		Log: cfg.Log,
+	}
+
+	app.Handle(http.MethodGet, version, "/test", tgh.Test)
 }
