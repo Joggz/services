@@ -2,10 +2,12 @@
 package testgrp
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"net/http"
 	"context"
 	"go.uber.org/zap"
+
+	"github.com/Joggz/services/foundation/web"
 )
 
 type Handlers  struct{
@@ -23,5 +25,6 @@ func (h Handlers) Test(ctx context.Context, w http.ResponseWriter, r *http.Reque
 
 	
 	h.Log.Infow(" Test  readiness", "statusCode", statusCode, "method", r.Method, "path", r.URL.Path, "remoteaddr", r.RemoteAddr)
-	return 	json.NewEncoder(w).Encode(data)
+	return  web.Respond(ctx, w, data, http.StatusOK)	
+	// json.NewEncoder(w).Encode(data)
 }
