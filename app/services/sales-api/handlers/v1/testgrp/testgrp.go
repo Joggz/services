@@ -21,10 +21,7 @@ func (h Handlers) Test(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	}{
 		Status: "OK",
 	}
-	statusCode := http.StatusOK
-
 	
-	h.Log.Infow(" Test  readiness", "statusCode", statusCode, "method", r.Method, "path", r.URL.Path, "remoteaddr", r.RemoteAddr)
 	return  web.Respond(ctx, w, data, http.StatusOK)	
 	// json.NewEncoder(w).Encode(data)
 }
