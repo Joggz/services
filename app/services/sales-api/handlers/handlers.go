@@ -12,6 +12,7 @@ import (
 	"github.com/Joggz/services/app/services/sales-api/handlers/debug/checkgrp"
 	"github.com/Joggz/services/app/services/sales-api/handlers/v1/testgrp"
 	"github.com/Joggz/services/foundation/web"
+	"github.com/Joggz/services/business/web/mid"
 )
 
 
@@ -63,7 +64,7 @@ type APIMuxConfig struct {
 
 // APIMux constructs a http.Handler with all application routes defined.
 func APIMux(cfg APIMuxConfig, log *zap.SugaredLogger ) *web.App  {
-	app := web.NewApp(cfg.Shutdown)
+	app := web.NewApp(cfg.Shutdown, mid.Logger(cfg.Log) )
 
 	v1(app, cfg)
 	
