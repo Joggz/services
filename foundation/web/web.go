@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"os"
 	"syscall"
-	// "time"
+	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
+	"github.com/google/uuid"
 	// "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	// "go.opentelemetry.io/otel/trace"
 )
@@ -62,8 +63,17 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context();
 		
-		if err := handler(ctx, w, r) ; err != nil {
-			// Erro Handling
+		// Set the context with the required values to
+		// process the request.
+		v := Values{
+			TraceID:uuid.New().String(),
+			Now:     time.Now().UTC(),
+		}
+		ctx = context.WithValue(ctx, key, &v)
+
+		// Call the wrapped handler functions.
+		if err := handler(ctx, w, r); err != nil {
+			a.SignalShutdown()
 			return
 		}
 	
