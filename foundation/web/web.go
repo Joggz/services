@@ -10,12 +10,7 @@ import (
 
 	"github.com/dimfeld/httptreemux/v5"
 	"github.com/google/uuid"
-	// "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	// "go.opentelemetry.io/otel/trace"
 )
-
-
-
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration
@@ -66,7 +61,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		// Set the context with the required values to
 		// process the request.
 		v := Values{
-			TraceID:uuid.New().String(),
+			TraceID: uuid.New().String(),
 			Now:     time.Now().UTC(),
 		}
 		ctx = context.WithValue(ctx, key, &v)
