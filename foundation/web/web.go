@@ -46,6 +46,7 @@ func (a *App) SignalShutdown() {
 // to the application server mux.
 func (a *App) Handle(method string, group string, path string, handler Handler,  mw ...Middleware) {
 
+	
 	// First wrap handler specific middleware around this handler.
 	handler = wrapMiddleware(mw, handler)
 
