@@ -18,6 +18,7 @@ func Logger(log *zap.SugaredLogger) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		log.Infow("request handler", handler)
 
+		
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
