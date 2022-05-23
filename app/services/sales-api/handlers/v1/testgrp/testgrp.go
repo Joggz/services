@@ -22,7 +22,7 @@ type Handlers  struct{
 func (h Handlers) Test(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	if n := rand.Intn(100); n%2 == 0 {
 		// return errors.New("untrusted error")
-		// return web.NewShutdownError("shutdown service")
+		
 		return validate.NewRequestError(errors.New("testing error"), http.StatusBadRequest)
 	}
 	data := struct{
