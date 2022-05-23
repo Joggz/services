@@ -12,9 +12,9 @@ import (
 
 type metrics struct {
 	goroutines *expvar.Int
-	request *expvar.Int
+	requests *expvar.Int
 	errors *expvar.Int
-	panicks *expvar.Int
+	panics *expvar.Int
 }
 
 var m  *metrics
@@ -27,9 +27,9 @@ var m  *metrics
 func init() {
 	m = &metrics{
 		goroutines: expvar.NewInt("goroutines"),
-		request: expvar.NewInt("request"),
+		requests: expvar.NewInt("requests"),
 		errors: expvar.NewInt("errors"),
-		panicks: expvar.NewInt("panicks"),
+		panics: expvar.NewInt("panics"),
 	}
 }
 
@@ -51,9 +51,13 @@ const key ctxKey = 1
 // different parts of the codebase. This will keep this package the
 // central authority for metrics and metrics won't get lost.
 
+func Set(ctx context.Context)  context.Context{
+	return context.WithValue(ctx, key, m)
+}
+
 func AdddGoroutine(ctx context.Context) {
 	if v, ok := ctx.Value(key).(*metrics); ok {
-		if v.request.Value() % 100 == 0{
+		if v.requests.Value() % 100 == 0{
 			v.goroutines.Set(int64(runtime.NumGoroutine()))
 		}
 	}
@@ -62,7 +66,7 @@ func AdddGoroutine(ctx context.Context) {
 
 func AddRequest(ctx context.Context) {
 	if v, ok := ctx.Value(key).(*metrics); ok {
-		v.request.Add(1)
+		v.requests.Add(1)
 	}
 }
 
@@ -74,6 +78,6 @@ func AddErrors (ctx context.Context) {
 
 func AddPanick (ctx context.Context) { 
 	if v, ok := ctx.Value(key).(*metrics); ok {
-		v.panicks.Add(1)
+		v.panics.Add(1)
 	}
 }

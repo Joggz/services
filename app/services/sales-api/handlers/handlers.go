@@ -67,6 +67,7 @@ func APIMux(cfg APIMuxConfig, log *zap.SugaredLogger ) *web.App  {
 		mid.Logger(cfg.Log),
 		mid.Error(cfg.Log),
 		mid.Panics(),
+		mid.Metrics(),
 	 )
 
 	v1(app, cfg)
