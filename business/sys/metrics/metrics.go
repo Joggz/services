@@ -58,3 +58,10 @@ func AdddGoroutine(ctx context.Context) {
 		}
 	}
 }
+
+
+func AddRequest(ctx context.Context) {
+	if v, ok := ctx.Value(key).(*metrics); ok {
+		v.request.Add(1)
+	}
+}
