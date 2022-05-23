@@ -65,3 +65,15 @@ func AddRequest(ctx context.Context) {
 		v.request.Add(1)
 	}
 }
+
+func AddErrors (ctx context.Context) {
+	if v, ok := ctx.Value(key).(*metrics); ok {
+		v.errors.Add(1)
+	}
+}
+
+func AddPanick (ctx context.Context) { 
+	if v, ok := ctx.Value(key).(*metrics); ok {
+		v.panicks.Add(1)
+	}
+}
