@@ -2,23 +2,22 @@ package main
 
 import (
 	// "log"
-	"time"
-	"runtime"
-	"os"
-	"errors"
-	"fmt"
-	"expvar"
-	"os/signal"
-	"syscall"
-	"net/http"
 	"context"
-	
-	"go.uber.org/automaxprocs/maxprocs"	
+	"errors"
+	"expvar"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"runtime"
+	"syscall"
+	"time"
+
 	"github.com/Joggz/services/app/services/sales-api/handlers"
+	"github.com/ardanlabs/conf"
+	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"github.com/ardanlabs/conf"
-	
 )
 
 var build = "develop"
@@ -129,7 +128,6 @@ func run(log *zap.SugaredLogger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 	// <-shutdown
 
-	log.Infow("logging logging", "testing testing", "testing testing",)
 		// Construct the mux for the API calls.
 		apiMux := handlers.APIMux(handlers.APIMuxConfig{
 			Shutdown: shutdown,

@@ -6,15 +6,14 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
-	
+
 	// "github.com/dimfeld/httptreemux/v5"
-	"go.uber.org/zap"
 	"github.com/Joggz/services/app/services/sales-api/handlers/debug/checkgrp"
 	"github.com/Joggz/services/app/services/sales-api/handlers/v1/testgrp"
-	"github.com/Joggz/services/foundation/web"
 	"github.com/Joggz/services/business/web/mid"
+	"github.com/Joggz/services/foundation/web"
+	"go.uber.org/zap"
 )
-
 
 // DebugStandardLibraryMux registers all the debug routes from the standard library
 // into a new mux bypassing the use of the DefaultServerMux. Using the
@@ -64,7 +63,11 @@ type APIMuxConfig struct {
 
 // APIMux constructs a http.Handler with all application routes defined.
 func APIMux(cfg APIMuxConfig, log *zap.SugaredLogger ) *web.App  {
-	app := web.NewApp(cfg.Shutdown, mid.Logger(cfg.Log) )
+	app := web.NewApp(cfg.Shutdown, 
+		mid.Logger(cfg.Log),
+		mid.Error(cfg.Log),
+		mid.Panics(),
+	 )
 
 	v1(app, cfg)
 	
