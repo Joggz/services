@@ -51,6 +51,10 @@ const key ctxKey = 1
 // different parts of the codebase. This will keep this package the
 // central authority for metrics and metrics won't get lost.
 
+func Set(ctx context.Context)  context.Context{
+	return context.WithValue(ctx, key, m)
+}
+
 func AdddGoroutine(ctx context.Context) {
 	if v, ok := ctx.Value(key).(*metrics); ok {
 		if v.request.Value() % 100 == 0{
