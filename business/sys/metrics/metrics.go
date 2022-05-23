@@ -2,7 +2,9 @@
 package metrics
 
 import (
+	"context"
 	"expvar"
+	"runtime"
 )
 
 // metrics represents the set of metrics we gather. These fields are
@@ -32,3 +34,27 @@ func init() {
 }
 
 
+// =============================================================================
+
+// Metrics will be supported through the context.
+
+// ctxKeyMetric represents the type of value for the context key.
+type ctxKey int
+
+// key is how metric values are stored/retrieved.
+const key ctxKey = 1
+
+// =============================================================================
+
+
+// Add more of these functions when a metric needs to be collected in
+// different parts of the codebase. This will keep this package the
+// central authority for metrics and metrics won't get lost.
+
+func AdddGoroutine(ctx context.Context) {
+	if v, ok := ctx.Value(key).(*metrics); ok {
+		if v.request.Value() % 100 == 0{
+			v.goroutines.Set(int64(runtime.NumGoroutine()))
+		}
+	}
+}
