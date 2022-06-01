@@ -32,7 +32,7 @@ func genToken() error {
 		return  fmt.Errorf("signing token: %w", err)
 	}
 
-		// limit PEM file size to 1 megabyte. This should be reasonable for
+		// limit PEM file size to 1 megabyte. This should be   reasonable for
 		// almost any PEM file and prevents shenanigans like linking the file
 		// to /dev/random or something like that.
 		privatePEM, err := io.ReadAll(io.LimitReader(file, 1024*1024))
