@@ -73,7 +73,7 @@ func run(log *zap.SugaredLogger) error {
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 		}
 		Auth struct {
-			KeysFolder string `conf:"default:zard/keys/"`
+			KeysFolder string `conf:"default:zarf/keys/"`
 			ActiveKidID string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
 		}
 	}{
