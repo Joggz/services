@@ -10,6 +10,7 @@ import (
 	// "github.com/dimfeld/httptreemux/v5"
 	"github.com/Joggz/services/app/services/sales-api/handlers/debug/checkgrp"
 	"github.com/Joggz/services/app/services/sales-api/handlers/v1/testgrp"
+	"github.com/Joggz/services/business/web/auth"
 	"github.com/Joggz/services/business/web/mid"
 	"github.com/Joggz/services/foundation/web"
 	"go.uber.org/zap"
@@ -57,7 +58,7 @@ func DebugMux(build string, log *zap.SugaredLogger ) http.Handler {
 type APIMuxConfig struct {
 	Shutdown chan os.Signal
 	Log      *zap.SugaredLogger
-	
+	Auth	*auth.Auth
 }
 
 

@@ -25,6 +25,8 @@ sales-api:
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
 
+admin: 
+	go run  app/services/tooling/admin/main.go
 # ==============================================================================  cd zarf/k8s/kind/sales-pod; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
 # Running from within k8s/kind // kubectl config set-context --current --namespace=sales-system
 KIND_CLUSTER := joggz-cluster
