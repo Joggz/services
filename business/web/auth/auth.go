@@ -7,6 +7,9 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+// ErrForbidden is returned when a auth issue is identified.
+var ErrForbiadden = errors.New("attempted action is not allowed")
+
 // Auth is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
