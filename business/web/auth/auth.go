@@ -24,7 +24,7 @@ type Auth struct {
 // private and public keys for JWT use.
 type KeyLookUp interface {
 	PrivateKey(kid string) (*rsa.PrivateKey, error)
-	Publickey(kid string) (*rsa.PublicKey, error)
+	PublicKey(kid string) (*rsa.PublicKey, error)
 }
 
 // New creates an Auth to support authentication/authorization.
@@ -48,7 +48,7 @@ func New(activeKeyID string,  KeyLookUp KeyLookUp) (*Auth, error) {
 		if !ok {
 			return nil, errors.New("user token key id (kid) must be string")
 		}
-		return KeyLookUp.Publickey(KidID)
+		return KeyLookUp.PublicKey(KidID)
 	}
 
 	parser := jwt.NewParser(jwt.WithValidMethods([]string{"RS256"}))

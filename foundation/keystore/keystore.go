@@ -5,6 +5,7 @@ package keystore
 
 import (
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -81,4 +82,46 @@ func NewFS(fys fs.FS) (*KeyStore, error) {
 		return nil, fmt.Errorf("walking directory: %w", err)
 	 }
 	return ks, nil
+}
+
+// Add adds a private key and combination kid to the store.
+func (ks *KeyStore) Add(privateKey *rsa.PrivateKey, kid string) {
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
+
+	ks.store[kid] = privateKey
+}
+
+// Remove removes a private key and combination kid to the store.
+func (ks *KeyStore) Remove(kid string) {
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
+
+	delete(ks.store, kid)
+}
+
+// PrivateKey searches the key store for a given kid and returns
+// the private key.
+func (ks *KeyStore) PrivateKey(kid string) (*rsa.PrivateKey, error) {
+	ks.mu.RLock()
+	defer ks.mu.RUnlock()
+
+	privateKey, found := ks.store[kid]
+	if !found {
+		return nil, errors.New("kid lookup failed")
+	}
+	return privateKey, nil
+}
+
+// PublicKey searches the key store for a given kid and returns
+// the public key.
+func (ks *KeyStore) PublicKey(kid string) (*rsa.PublicKey, error) {
+	ks.mu.RLock()
+	defer ks.mu.RUnlock()
+
+	privateKey, found := ks.store[kid]
+	if !found {
+		return nil, errors.New("kid lookup failed")
+	}
+	return &privateKey.PublicKey, nil
 }
