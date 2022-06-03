@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/rsa"
 	"errors"
+	"fmt"
 
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -63,4 +64,19 @@ func New(activeKeyID string,  KeyLookUp KeyLookUp) (*Auth, error) {
 	}
 
 	return &a, nil
+}
+// ValidateToken recreates the Claims that were used to generate a token. It
+// verifies that the token was signed using our key.
+func (a *Auth) ValidateToken(tokenStr string) (Claims, error) {
+	var claims Claims
+	token, err := a.parser.ParseWithClaims(tokenStr, &claims, a.KeyFunc)
+	if err != nil {
+		return Claims{}, fmt.Errorf("parsing token: %w", err)
+	}
+
+	if !token.Valid {
+		return Claims{}, errors.New("invalid token")
+	}
+
+	return claims, nil
 }
