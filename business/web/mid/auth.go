@@ -3,6 +3,7 @@ package mid
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -35,6 +36,33 @@ func Authenticate(a *auth.Auth) web.Middleware {
 
 				return handler(ctx, w, r)
 		
+		}
+		return h
+	}
+	return m
+}
+
+
+// Authorize validates that an authenticated user has at least one role from a
+// specified list. This method constructs the actual function that is used.
+func Authorize(roles ...string) web.Middleware {
+	m := func(handler web.Handler) web.Handler { 
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+			claims, err := auth.GetClaims(ctx)
+			if err != nil {
+				return validate.NewRequestError(
+					fmt.Errorf("you are not authorized for that action, no claims"),
+					http.StatusForbidden,
+				)
+			}
+
+			if !claims.Authorized(roles...){
+				return validate.NewRequestError(
+					fmt.Errorf("you are not authorized for that action, claims[%v] roles[%v]", claims.Role, roles),
+					http.StatusForbidden,
+				)
+			}
+			return handler(ctx, w, r)
 		}
 		return h
 	}
