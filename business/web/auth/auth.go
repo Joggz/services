@@ -65,6 +65,26 @@ func New(activeKeyID string,  KeyLookUp KeyLookUp) (*Auth, error) {
 
 	return &a, nil
 }
+
+
+func (a *Auth) GenerateToken(claims Claims) (string, error) {
+	token := jwt.NewWithClaims(a.method, claims)
+	token.Header["kid"] = a.activeKeyID
+
+	privateKey, err := a.KeyLookUp.PrivateKey(a.activeKeyID)
+	if err != nil {
+		return "", errors.New("kid lookup failed")
+	}
+
+	str, err := token.SignedString(privateKey)
+	if err != nil {
+		return "", fmt.Errorf("signing token: %w", err)
+	}
+
+	return str, nil
+}
+
+
 // ValidateToken recreates the Claims that were used to generate a token. It
 // verifies that the token was signed using our key.
 func (a *Auth) ValidateToken(tokenStr string) (Claims, error) {
