@@ -51,6 +51,8 @@ kind-load:
 	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
 
 kind-apply:
+	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
+	kubectl wait --namespace=database-system --timeout=120s --for=condition=Available deployment/database-pod
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
 
 kind-logs:
@@ -65,6 +67,9 @@ kind-update-apply: all kind-load kind-apply
 
 kind-status-sales:
 	kubectl get pods -o wide --watch --all-namespaces
+
+kind-status-db:
+	kubectl get pods -o wide --watch --namespace=database-system
 # build:
 # 	go build -ldflags "-X main.build=local"
 
