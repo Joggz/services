@@ -1,8 +1,10 @@
 package DB
 
 import (
+	"context"
 	"errors"
 	"net/url"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -60,3 +62,34 @@ type Config struct {
 
 	return db, nil
  }
+
+ // StatusCheck returns nil if it can successfully talk to the database. It
+// returns a non-nil error otherwise.
+func StatusCheck(ctx context.Context, db *sqlx.DB) error  {
+	
+	var pingError error
+
+	for attempts := 1; ; attempts++ {
+		pingError =  db.Ping()
+		if pingError == nil {
+			break;
+		}
+
+		time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
+		// Make sure we didn't timeout or be cancelled.
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+	}
+
+	// Make sure we didn't timeout or be cancelled.
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+		// Run a simple query to determine connectivity. Running this query forces a
+	// round trip through the database.
+	const q = `SELECT true`
+	var tmp bool;
+	return db.QueryRowContext(ctx, q).Scan(&tmp)
+}
