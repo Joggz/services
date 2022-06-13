@@ -48,6 +48,8 @@ func TestAuth(t *testing.T) {
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to generate a JWT: %v", failed, testID, err)
 			}
+			t.Log(".token", success, token)
+
 			t.Logf("\t%s\tTest %d:\tShould be able to generate a JWT.", success, testID)
 
 			parsedClaims, err := a.ValidateToken(token)
@@ -62,8 +64,8 @@ func TestAuth(t *testing.T) {
 				t.Fatalf("\t%s\tTest %d:\tShould have the expected number of roles: %v", failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have the expected number of roles.", success, testID)
-
-
+			
+			
 		}
 	}
 }
