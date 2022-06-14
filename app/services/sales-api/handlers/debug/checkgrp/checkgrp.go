@@ -2,16 +2,21 @@
 package checkgrp
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/Joggz/services/business/sys/database"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
 
 type Handlers  struct{
 	Build string
 	Log *zap.SugaredLogger
+	DB *sqlx.DB
 }
 
 
@@ -19,12 +24,36 @@ type Handlers  struct{
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
 func (h Handlers) Readiness(w http.ResponseWriter, r *http.Request) {
-	data := struct{
+	// data := struct{
+	// 	Status string `json:"status"`
+	// }{
+	// 	Status: "OK",
+	// }
+	// statusCode := http.StatusOK
+
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second)
+	defer cancel()
+
+	status := "ok"
+	statusCode := http.StatusOK // 200
+	// err := database.StatusCheck(ctx, h.DB , h.Log); 
+	// h.Log.Error("debugging error", status, " err", err.Error(), " request context", r.Context() )
+
+	if err := database.StatusCheck(ctx, h.DB , h.Log); err != nil {
+	
+		status = "db not ready"
+		statusCode = http.StatusInternalServerError //500
+
+		h.Log.Error("status", status, " StatusCode", statusCode, " err", err.Error() )
+	}
+
+	
+
+	data :=  struct {
 		Status string `json:"status"`
 	}{
-		Status: "OK",
+		Status: status,
 	}
-	statusCode := http.StatusOK
 
 	if  err := response(w, statusCode, data); err != nil{
 		h.Log.Error("readiness", "Error", err)

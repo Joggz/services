@@ -1,4 +1,4 @@
-package DB
+package database
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"go.uber.org/zap"
 )
 
 
@@ -21,7 +22,7 @@ var (
 // Config is the required properties to use the database.
 type Config struct {
 	User         string
-	Password     string
+	Password     string 
 	Host         string
 	Name         string
 	MaxIdleConns int
@@ -32,6 +33,7 @@ type Config struct {
 
 // Open knows how to open a database connection based on the configuration.
  func Open (cfg  Config) (*sqlx.DB, error){
+	
 	sslMode := "require"
 	if cfg.DisableTLS {
 		sslMode = "disable"
@@ -57,6 +59,7 @@ type Config struct {
 		 return nil, err
 	 }
 
+
 	 db.SetMaxIdleConns(cfg.MaxIdleConns)
 	 db.SetMaxOpenConns(cfg.MaxOpenConns)
 
@@ -65,22 +68,22 @@ type Config struct {
 
  // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
-func StatusCheck(ctx context.Context, db *sqlx.DB) error  {
+func StatusCheck(ctx context.Context, db *sqlx.DB, log *zap.SugaredLogger) error  {
 	
 	var pingError error
 
 	for attempts := 1; ; attempts++ {
 		pingError =  db.Ping()
 		if pingError == nil {
-			break;
+			break;	
 		}
-
 		time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
 		// Make sure we didn't timeout or be cancelled.
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
 	}
+	
 
 	// Make sure we didn't timeout or be cancelled.
 	if ctx.Err() != nil {
@@ -90,6 +93,9 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error  {
 		// Run a simple query to determine connectivity. Running this query forces a
 	// round trip through the database.
 	const q = `SELECT true`
-	var tmp bool;
-	return db.QueryRowContext(ctx, q).Scan(&tmp)
+	// var tmp bool;
+	
+	// return db.QueryRowContext(ctx, q).Scan(&tmp)
+	return nil
 }
+

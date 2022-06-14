@@ -19,7 +19,7 @@ func Panics() web.Middleware {
 				if rec := recover(); rec != nil {
 
 					trace := debug.Stack()
-					err = fmt.Errorf("PANIC [%v] TRACE [%s]", rec, string(trace) )
+					err = fmt.Errorf(" jfhffhfhfhfhfhPANIC [%v] TRACE [%s]", rec, string(trace) )
 				}
 			}()
 			return handler(ctx, w, r)
