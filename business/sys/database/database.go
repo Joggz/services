@@ -3,12 +3,11 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"go.uber.org/zap"
 )
 
 
@@ -38,11 +37,14 @@ type Config struct {
 	if cfg.DisableTLS {
 		sslMode = "disable"
 	}
+
+	
 	q := make(url.Values)
-	q.Set("sslMode", sslMode)
+	q.Set("sslmode", sslMode)
 	q.Set("timezone", "UTC")
 
 	// [scheme:][//[userinfo@]host][/]path[?query][#fragment]
+	fmt.Println("SSLMODE %w", sslMode, q.Encode())
 	u := url.URL{
 		Scheme:      "postgres",
 		Opaque:      "",
@@ -68,21 +70,21 @@ type Config struct {
 
  // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
-func StatusCheck(ctx context.Context, db *sqlx.DB, log *zap.SugaredLogger) error  {
+func StatusCheck(ctx context.Context, db *sqlx.DB) error  {
 	
-	var pingError error
+	// var pingError error
 
-	for attempts := 1; ; attempts++ {
-		pingError =  db.Ping()
-		if pingError == nil {
-			break;	
-		}
-		time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
+	// for attempts := 1; ; attempts++ {
+	// 	pingError =  db.Ping()
+	// 	if pingError == nil {
+	// 		break;	
+	// 	}
+		// time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
 		// Make sure we didn't timeout or be cancelled.
-		if ctx.Err() != nil {
-			return ctx.Err()
-		}
-	}
+	// 	if ctx.Err() != nil {
+	// 		return ctx.Err()
+	// 	}
+	// }
 	
 
 	// Make sure we didn't timeout or be cancelled.
