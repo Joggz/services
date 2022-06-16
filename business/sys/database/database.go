@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"go.uber.org/zap"
 )
 
 
@@ -71,7 +71,7 @@ type Config struct {
 
  // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
-func StatusCheck(ctx context.Context, db *sqlx.DB, log *zap.SugaredLogger) error  {
+func StatusCheck(ctx context.Context, db *sqlx.DB) error  {
 	
 
 	var pingError error
