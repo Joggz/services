@@ -39,7 +39,8 @@ func (h Handlers) Readiness(w http.ResponseWriter, r *http.Request) {
 	// err := database.StatusCheck(ctx, h.DB , h.Log); 
 	// h.Log.Error("debugging error", status, " err", err.Error(), " request context", r.Context() )
 
-	if err := database.StatusCheck(ctx, h.DB , h.Log); err != nil {
+
+	if err := database.StatusCheck(ctx, h.DB); err != nil {
 	
 		status = "db not ready"
 		statusCode = http.StatusInternalServerError //500

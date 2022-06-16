@@ -3,8 +3,8 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -38,11 +38,14 @@ type Config struct {
 	if cfg.DisableTLS {
 		sslMode = "disable"
 	}
+
+	
 	q := make(url.Values)
-	q.Set("sslMode", sslMode)
+	q.Set("sslmode", sslMode)
 	q.Set("timezone", "UTC")
 
 	// [scheme:][//[userinfo@]host][/]path[?query][#fragment]
+	fmt.Println("SSLMODE %w", sslMode, q.Encode())
 	u := url.URL{
 		Scheme:      "postgres",
 		Opaque:      "",
@@ -70,6 +73,7 @@ type Config struct {
 // returns a non-nil error otherwise.
 func StatusCheck(ctx context.Context, db *sqlx.DB, log *zap.SugaredLogger) error  {
 	
+
 	var pingError error
 
 	for attempts := 1; ; attempts++ {
@@ -83,6 +87,7 @@ func StatusCheck(ctx context.Context, db *sqlx.DB, log *zap.SugaredLogger) error
 			return ctx.Err()
 		}
 	}
+
 	
 
 	// Make sure we didn't timeout or be cancelled.
