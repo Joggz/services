@@ -53,9 +53,39 @@ func migrate() error{
 	}
 
 	fmt.Println("migrations complete")
+	 Seed()
 	return nil
 
 }
+// Seed loads test data into the database.
+func Seed() error {
+	cfg :=  database.Config{
+		User : "postgres",
+		Password: "postgres",   
+		Host : "localhost", 
+		Name : "postgres",
+		MaxIdleConns: 0,
+		MaxOpenConns: 0,
+		DisableTLS : true, 
+};
+	db, err := database.Open(cfg)
+	if err != nil {
+		return fmt.Errorf("connect database: %w", err)
+	}
+	defer db.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := dbschema.Seed(ctx, db); err != nil {
+		return fmt.Errorf("seed database: %w", err)
+	}
+
+	fmt.Println("seed data complete")
+	return nil
+}
+
+
 func genToken() error {
 	
 	name :="zarf/keys/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1.pem"
@@ -229,3 +259,5 @@ func genKey() error {
 		fmt.Println("private and public key files generated")
 	return nil
 }
+
+
