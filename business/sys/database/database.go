@@ -8,6 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"go.uber.org/zap"
 )
 
 
@@ -70,21 +71,23 @@ type Config struct {
 
  // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
-func StatusCheck(ctx context.Context, db *sqlx.DB) error  {
+func StatusCheck(ctx context.Context, db *sqlx.DB, log *zap.SugaredLogger) error  {
 	
-	// var pingError error
 
-	// for attempts := 1; ; attempts++ {
-	// 	pingError =  db.Ping()
-	// 	if pingError == nil {
-	// 		break;	
-	// 	}
-		// time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
+	var pingError error
+
+	for attempts := 1; ; attempts++ {
+		pingError =  db.Ping()
+		if pingError == nil {
+			break;	
+		}
+		time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
 		// Make sure we didn't timeout or be cancelled.
-	// 	if ctx.Err() != nil {
-	// 		return ctx.Err()
-	// 	}
-	// }
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+	}
+
 	
 
 	// Make sure we didn't timeout or be cancelled.
