@@ -61,5 +61,50 @@ func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (User, err
 		return User{}, fmt.Errorf("inserting user: %w", err)
 	}
 
-	return User{}, nil
+	return usr, nil
+}
+
+
+
+// Update replaces a user document in the database.
+func (s Store) Update(ctx context.Context, usr User) error {
+	const q = `
+	UPDATE
+		users
+	SET 
+		"name" = :name,
+		"email" = :email,
+		"roles" = :roles,
+		"password_hash" = :password_hash,
+		"date_updated" = :date_updated
+	WHERE
+		user_id = :user_id`
+
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
+		return fmt.Errorf("updating userID[%s]: %w", usr.ID, err)
+	}
+
+	return nil
+}
+
+
+// Delete removes a user from the database.
+func (s Store) Delete(ctx context.Context, userID string) error {
+	data := struct {
+		UserID string `db:"user_id"`
+	}{
+		UserID: userID,
+	}
+
+	const q = `
+	DELETE FROM
+		users
+	WHERE
+		user_id = :user_id`
+
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+		return fmt.Errorf("deleting userID[%s]: %w", userID, err)
+	}
+
+	return nil
 }
