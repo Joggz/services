@@ -13,7 +13,7 @@ const (
 )
 
 type Claims struct {
-	jwt.RegisteredClaims;
+	jwt.StandardClaims
 	Role []string `json:"roles"`
 }
 
