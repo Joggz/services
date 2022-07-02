@@ -3,8 +3,8 @@ SHELL := /bin/bash
 # ==============================================================================
 # Testing running system
 
-# expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
-
+# ./expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+#  hey -m GET -c 100 -n 10000 http://localhost:3000/v1/test
 debug: 
 	expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 run:
@@ -25,6 +25,8 @@ sales-api:
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
 
+admin: 
+	go run  app/services/tooling/admin/main.go
 # ==============================================================================  cd zarf/k8s/kind/sales-pod; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
 # Running from within k8s/kind // kubectl config set-context --current --namespace=sales-system
 KIND_CLUSTER := joggz-cluster
@@ -49,6 +51,8 @@ kind-load:
 	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
 
 kind-apply:
+	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
+	kubectl wait --namespace=database-system --timeout=120s --for=condition=Available deployment/database-pod
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
 
 kind-logs:
@@ -59,8 +63,13 @@ kind-update: all kind-load kind-restart
 kind-restart:
 	kubectl rollout restart deployment sales-pod 
 
+kind-update-apply: all kind-load kind-apply
+
 kind-status-sales:
 	kubectl get pods -o wide --watch --all-namespaces
+
+kind-status-db:
+	kubectl get pods -o wide --watch --namespace=database-system
 # build:
 # 	go build -ldflags "-X main.build=local"
 
@@ -69,3 +78,10 @@ kind-status-sales:
 tidy:
 	go mod tidy
 	go mod vendor
+
+# ==============================================================================
+# Running tests within the local computer
+
+test:
+	go test ./... -count=1
+	staticcheck -checks=all ./...

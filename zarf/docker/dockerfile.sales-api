@@ -1,9 +1,14 @@
 FROM golang:1.18 as build_sales-api
 ENV CGO_ENABLED 0
 ARG BUILD_REF
-
+ 
 # Copy the source code into the container.
 COPY . /service
+
+
+# Build the admin binary.
+WORKDIR /service/app/services/tooling/admin
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 # Build the service binary.
 WORKDIR /service/app/services/sales-api
@@ -15,7 +20,11 @@ RUN go build -ldflags "-X main.build=${BUILD_REF}"
 FROM alpine:3.14
 ARG BUILD_DATE
 ARG BUILD_REF
-# COPY --from=build_sales-api /service /service/service
+# # COPY --from=build_sales-api /service /service/service
+# COPY --from=build_sales-api --chown=sales:sales /service/app/tooling/sales-admin/sales-admin /service/sales-admin
+
+COPY --from=build_sales-api  /service/zarf/keys/. /service/zarf/keys/.
+COPY --from=build_sales-api /service/app/services/tooling/admin/admin /service/admin
 COPY --from=build_sales-api /service/app/services/sales-api/sales-api /service/sales-api
 WORKDIR /service
 CMD ["./sales-api"]

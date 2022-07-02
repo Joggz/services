@@ -2,26 +2,29 @@ package main
 
 import (
 	// "log"
-	"time"
-	"runtime"
-	"os"
-	"errors"
-	"fmt"
-	"expvar"
-	"os/signal"
-	"syscall"
-	"net/http"
 	"context"
-	
-	"go.uber.org/automaxprocs/maxprocs"	
+	"errors"
+	"expvar"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"runtime"
+	"syscall"
+	"time"
+
 	"github.com/Joggz/services/app/services/sales-api/handlers"
+	"github.com/Joggz/services/business/sys/database"
+	"github.com/Joggz/services/business/web/auth"
+	"github.com/Joggz/services/foundation/keystore"
+	"github.com/ardanlabs/conf"
+	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"github.com/ardanlabs/conf"
-	
 )
 
 var build = "develop"
+
 
 /*
 	- Need to figure out timeout for httpService
@@ -70,6 +73,19 @@ func run(log *zap.SugaredLogger) error {
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 		}
+		Auth struct {
+			KeysFolder string `conf:"default:zarf/keys/"`
+			ActiveKidID string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
+		}
+		DB struct {
+			User         string `conf:"default:postgres"`
+			Password     string `conf:"default:postgres,mask"`
+			Host         string `conf:"default:localhost"`
+			Name         string `conf:"default:postgres"`
+			MaxIdleConns int    `conf:"default:0"`
+			MaxOpenConns int    `conf:"default:0"`
+			DisableTLS   bool   `conf:"default:true"`
+		}
 	}{
 		Version: conf.Version{
 			SVN: build,
@@ -101,7 +117,50 @@ func run(log *zap.SugaredLogger) error {
 
 	expvar.NewString("build").Set(build)
 
+	// =========================================================================
+	// Initialize authentication support
 
+	log.Infow("startup", "status", "initializing authentication support")
+
+	ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
+	if err != nil {
+		return fmt.Errorf("reading keys: %w", err)
+	}
+	
+
+	auth, err := auth.New(cfg.Auth.ActiveKidID, ks)
+	if err != nil {
+		return fmt.Errorf("constructing auth: %w", err)
+	}
+	
+	
+   
+   	// =========================================================================
+	// Database Support
+//  dblab --host 0.0.0.0 --user postgres --db postgres --pass postgres --ssl disable --port 5432 --driver postgres
+	// Create connectivity to the database.
+	log.Infow("startup", "status", "initializing database support", "host", cfg.DB.Host)
+	db, err := database.Open(database.Config{
+		User:         cfg.DB.User,
+		Password:     cfg.DB.Password,
+		Host:         cfg.DB.Host,
+		Name:         cfg.DB.Name,
+		MaxIdleConns: cfg.DB.MaxIdleConns,
+		MaxOpenConns: cfg.DB.MaxOpenConns,
+		DisableTLS:   cfg.DB.DisableTLS,
+	})
+
+	if err != nil {
+		return fmt.Errorf("connecting to db %w", err)
+	} 
+
+
+	defer func ()  {
+		log.Infow("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
+		db.Close()
+	}()
+	// ========================================================================= 
+	
 	// =========================================================================
 	// Start Debug Service
 
@@ -111,7 +170,7 @@ func run(log *zap.SugaredLogger) error {
 	// related endpoints. This includes the standard library endpoints.
 
 	// Construct the mux for the debug calls.
-	debugMux := handlers.DebugStandardLibraryMux()
+	debugMux := handlers.DebugMux(build, log, db)
 
 	// Start the service listening for debug requests.
 	// Not concerned with shutting this down with load shedding.
@@ -129,13 +188,13 @@ func run(log *zap.SugaredLogger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 	// <-shutdown
 
-	log.Infow("logging logging", "testing testing", "testing testing",)
 		// Construct the mux for the API calls.
 		apiMux := handlers.APIMux(handlers.APIMuxConfig{
 			Shutdown: shutdown,
 			Log:      log,
-			
-		})
+			Auth:    auth,
+			DB:       db,
+		}, log)
 
 		// Construct a server to service the requests against the mux.
 	api := http.Server{
