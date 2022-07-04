@@ -8,6 +8,7 @@ import (
 	"net"
 	"os/exec"
 	"strings"
+	"testing"
 )
 
 // type Container tracks information about container sstarte for the test
@@ -51,11 +52,13 @@ func StartContainer(image string, port string, args ...string) ( *Container, err
 	return &c, nil
 }
 
+
+// StopContainer stops and removes the specified container.
 func StopContainer(id string) error {
 	if err := exec.Command("docker", "stop", id).Run(); err != nil {
 		return fmt.Errorf("could not stop container: %w", err)
 	}
-	
+
 	fmt.Println("Stopped:", id)
 
 	if err :=  exec.Command("docker", "rm", id, "-v").Run(); err != nil {
@@ -66,6 +69,16 @@ func StopContainer(id string) error {
 
 
 	return nil
+}
+
+// DumpContainerLogs outputs logs from the running docker container.
+func DumpContainerLogs( t *testing.T, id string)  {
+	out, err := exec.Command("docker", "logs", id).CombinedOutput();
+	if err != nil {
+		t.Fatalf("could not log container: %v", err)
+	}
+	t.Logf("Logs for %s\n%s:", id, out)
+
 }
 
 
