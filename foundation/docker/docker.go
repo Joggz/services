@@ -51,6 +51,23 @@ func StartContainer(image string, port string, args ...string) ( *Container, err
 	return &c, nil
 }
 
+func StopContainer(id string) error {
+	if err := exec.Command("docker", "stop", id).Run(); err != nil {
+		return fmt.Errorf("could not stop container: %w", err)
+	}
+	
+	fmt.Println("Stopped:", id)
+
+	if err :=  exec.Command("docker", "rm", id, "-v").Run(); err != nil {
+		return fmt.Errorf("could not remove container: %w", err)
+	}
+
+	fmt.Println("Removed:", id)
+
+
+	return nil
+}
+
 
 func extractIPPort(id string, port string) (hostIP string, hostPort string, err error) {
 	tmpl := fmt.Sprintf("[{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{json $v}}{{end}}]", port)
