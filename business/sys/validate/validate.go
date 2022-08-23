@@ -3,6 +3,7 @@ package validate
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -71,6 +72,7 @@ func Check(val any) error {
 			}
 			fields = append(fields, field)
 		}
+		fmt.Printf("vaalidation error %v", fields)
 
 		return fields
 	}

@@ -42,9 +42,9 @@ func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (User, err
 	if err != nil {
 		return User{}, fmt.Errorf("generating password hash: %w", err)
 	}
-
+// validate.GenerateID()
 	usr := User{
-		ID:           validate.GenerateID(),
+		ID:          validate.GenerateID(),
 		Name:         nu.Name,
 		Email:        nu.Email,
 		PasswordHash: hash,
@@ -52,6 +52,8 @@ func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (User, err
 		DateCreated:  now,
 		DateUpdated:  now,
 	}
+
+	
 
 	const q = `
 	INSERT INTO users
@@ -123,7 +125,7 @@ func (s Store) Update(ctx context.Context, claims auth.Claims,  userID string, u
 
 // Delete removes a user from the database.
 func (s Store) Delete(ctx context.Context, claims auth.Claims, userID string) error {
-	if err := validate.Check(userID); err != nil {
+	if err := validate.CheckID(userID); err != nil {
 		return database.ErrInvalidID
 	}
 
@@ -180,23 +182,21 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Us
 
 
 func (s Store) QueryByID(ctx context.Context, claims auth.Claims, userID string) (User, error) {
-	if err := validate.Check(userID); err != nil {
+	if err := validate.CheckID(userID); err != nil {
 		return User{}, database.ErrInvalidID
 	}
-
 	// if you an not an admin and looking to delete someone other than yourself
 	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
 		return User{}, database.ErrForbidden
 	}
+	
 	data := struct{
 		UserID string `db:"user_id"`
 	}{
 		UserID: userID,
 	}
 
-	const q = `
-		SELECT * users WHERE user_id = :user_id
-	`
+	const q = `SELECT * FROM users WHERE user_id = :user_id`
 
 	var usr User
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr ); err != nil {
@@ -204,6 +204,7 @@ func (s Store) QueryByID(ctx context.Context, claims auth.Claims, userID string)
 			return User{}, database.ErrNotFound
 		}
 	}
+	
 	return usr, nil;
 }
 
@@ -223,7 +224,7 @@ func (s Store) QueryByEmail(ctx context.Context, claims auth.Claims, email strin
 	}
 
 	const q = `
-		SELECT * users WHERE email = :email
+		SELECT * FROM users WHERE email = :email
 	`
 
 	var usr User
@@ -248,7 +249,7 @@ func (s Store) Authenticate(ctx context.Context, now time.Time, email string, pa
 		Email: email,
 	}
 
-	const q = ` SELECT * user WHERE email= :email`
+	const q = ` SELECT * FROM user WHERE email= :email`
 	var usr User 
 
 	if err := database.NamedQueryStruct(ctx,s.log,s.db, q, data, &usr); err != nil{
@@ -276,3 +277,4 @@ func (s Store) Authenticate(ctx context.Context, now time.Time, email string, pa
 	}
 	return claims, nil
 }
+

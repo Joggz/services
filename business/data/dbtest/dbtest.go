@@ -43,8 +43,8 @@ func NewUnit(t *testing.T, dbc DBContainer)(*zap.SugaredLogger, *sqlx.DB, func()
 		c, _ := docker.StartContainer(dbc.Image, dbc.Port, dbc.Args...)
 
 		db, err := database.Open(database.Config{
-			User:         "postgre",
-			Password:     "postgres",
+			User:         "postgres",
+			Password:     "password",
 			Host:         c.Host,
 			Name:         "postgres",
 			DisableTLS:   true,
@@ -54,11 +54,13 @@ func NewUnit(t *testing.T, dbc DBContainer)(*zap.SugaredLogger, *sqlx.DB, func()
 			t.Fatalf("opening database connection: %v", err)
 		}
 
-		t.Log("waiting for database to be ready")
+		// t.Log("waiting for database to be ready", db )
 
-	ctx, cancel :=	context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel :=	context.WithTimeout(context.Background(), 30*time.Second)
+	t.Log("waiting for database to be ready", db )
+	
 	defer cancel()
-
+	t.Log("database should be ready", db )
 	if err :=	dbschema.Migrate(ctx, db); err != nil {
 		docker.DumpContainerLogs(t, c.ID)
 		docker.StopContainer(c.ID)
@@ -92,4 +94,8 @@ func NewUnit(t *testing.T, dbc DBContainer)(*zap.SugaredLogger, *sqlx.DB, func()
 
 	}
 	return log, db, teardown
+}
+
+func StringPointer(s string) *string {
+	return &s
 }

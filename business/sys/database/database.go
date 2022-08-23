@@ -175,12 +175,11 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn f
 
 // NamedExecContext is a helper function to execute a CUD operation with
 // logging and tracing.
-func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any) error {
+func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, query string, data any) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedExecContext", "traceid", web.GetTraceID(ctx), "query", q)
 
-	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
-
+	if _, err := db.NamedExecContext(ctx, query, data); err != nil {
 		// Checks if the error is of code 23505 (unique_violation).
 		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
 			return ErrDBDuplicatedEntry
@@ -216,16 +215,25 @@ func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 	return nil
 }
 
-// NamedQueryStruct is a helper function for executing queries that return a
-// single value to be unmarshalled into a struct type.
-func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
+
+
+func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, query string, data any, dest any) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQueryStruct", "traceid", web.GetTraceID(ctx), "query", q)
 
-	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
+	
+	rows, err := db.NamedQueryContext(ctx, query, data)
+	// log.Infow("query result", "destination:", dest,  "rows sqlx shit", rows, "error", err)
+
+
+	
 	if err != nil {
+		log.Infow("query error", "destination:", dest,  "rows sqlx shit", rows, "error", err)
 		return err
 	}
+
+	// log.Infow("query result i dont know what it gonna return", "destination:", dest,  "rows sqlx shit", rows)
+	
 	defer rows.Close()
 
 	if !rows.Next() {
@@ -233,8 +241,10 @@ func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	}
 
 	if err := rows.StructScan(dest); err != nil {
+		fmt.Printf("Error %v", err)
 		return err
 	}
+
 
 	return nil
 }
