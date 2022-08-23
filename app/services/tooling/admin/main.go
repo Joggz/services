@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Joggz/services/business/sys/data/dbschema"
+	"github.com/Joggz/services/business/data/dbschema"
 	"github.com/Joggz/services/business/sys/database"
 	"github.com/golang-jwt/jwt/v4"
 )
