@@ -2,11 +2,13 @@ package usrgrp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/Joggz/services/business/data/store/user"
+	"github.com/Joggz/services/business/sys/database"
 	"github.com/Joggz/services/business/sys/validate"
 	"github.com/Joggz/services/business/web/auth"
 	"github.com/Joggz/services/foundation/web"
@@ -53,6 +55,28 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	}
 
 	user, err :=	h.User.Query(ctx, pageNumber, rowsPerPage, )
+
+	return web.Respond(ctx, w, user, http.StatusAccepted)
+}
+
+func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	claim, err := auth.GetClaims(ctx)
+	if err != nil {
+		return errors.New("cant find clains in context")
+	}
+
+	id := web.Param(r, "id")
+	user, err := h.User.QueryByID(ctx, claim, id)
+	if err != nil {
+		switch{
+		case errors.Is(err, database.ErrInvalidID):
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		case errors.Is(err, database.ErrNotFound):
+			return validate.NewRequestError(err, http.StatusNotFound)
+		default:
+			return fmt.Errorf("ID[%s]: %w", user.ID, err)
+		}
+	}
 
 	return web.Respond(ctx, w, user, http.StatusAccepted)
 }

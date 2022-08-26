@@ -26,3 +26,4 @@ func Decode(r *http.Request, val any) error {
 
 	return nil
 }
+
