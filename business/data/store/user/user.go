@@ -5,6 +5,7 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -30,6 +31,17 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 		db:  db,
 	}
 }
+
+
+// Set of error variables for CRUD operations.
+var (
+	ErrNotFound              = errors.New("user not found")
+	ErrInvalidID             = errors.New("ID is not in its proper form")
+	ErrInvalidEmail          = errors.New("email is not valid")
+	ErrUniqueEmail           = errors.New("email is not unique")
+	ErrAuthenticationFailure = errors.New("authentication failed")
+)
+
 
 
 // Create inserts a new user into the database.
