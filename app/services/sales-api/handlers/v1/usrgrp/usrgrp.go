@@ -74,9 +74,40 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 		case errors.Is(err, database.ErrNotFound):
 			return validate.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("ID[%s]: %w", user.ID, err)
+			return fmt.Errorf("ID[%s]: %w", id, err)
 		}
 	}
 
 	return web.Respond(ctx, w, user, http.StatusAccepted)
+}
+
+func (h Handlers) Update( ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	v, err := web.GetValues(ctx)
+	if err != nil {
+		return web.NewShutdownError("web value not found in context")
+	}	
+
+	claim, err := auth.GetClaims(ctx)	
+	if err != nil {
+		return errors.New("cant find clains in context")
+	}
+
+	id := web.Param(r, "id")
+
+	var upd user.UpdateUser
+	if err := web.Decode(r, &upd); err != nil {
+		return fmt.Errorf("unable to decode payload: %w", err)
+	}
+
+	if err := h.User.Update(ctx, claim, id, upd, v.Now); err != nil {
+		switch{
+		case errors.Is(err, database.ErrInvalidID):
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		case errors.Is(err, database.ErrNotFound):
+			return validate.NewRequestError(err, http.StatusNotFound)
+		default:
+			return fmt.Errorf("ID[%s]: %w", id, err)
+		}
+	}
+	return web.Respond(ctx, w, upd, http.StatusNoContent)
 }
