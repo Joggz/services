@@ -111,3 +111,24 @@ func (h Handlers) Update( ctx context.Context, w http.ResponseWriter, r *http.Re
 	}
 	return web.Respond(ctx, w, upd, http.StatusNoContent)
 }
+
+func (h Handlers) QueryByEmail(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	claim, err := auth.GetClaims(ctx)
+	if err != nil {
+		return errors.New("cant find clains in context")
+	}
+	email := web.Param(r, "email")
+	user, err := h.User.QueryByEmail(ctx, claim, email)
+	if err != nil {
+		switch  {
+		case errors.Is(err, database.ErrInvalidID):
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		case errors.Is(err, database.ErrNotFound):
+			return validate.NewRequestError(err, http.StatusNotFound)
+		default:
+			return fmt.Errorf("ID[%s]: %w", email, err)
+		}
+			
+		}
+		return web.Respond(ctx, w, user, http.StatusNoContent)
+	}
