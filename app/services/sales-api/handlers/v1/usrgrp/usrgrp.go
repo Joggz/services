@@ -131,4 +131,23 @@ func (h Handlers) QueryByEmail(ctx context.Context, w http.ResponseWriter, r *ht
 			
 		}
 		return web.Respond(ctx, w, user, http.StatusNoContent)
+}
+
+func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	claim, err := auth.GetClaims(ctx)
+	if err != nil {
+		return errors.New("cant find clains in context")
 	}
+
+	id := web.Param(r, "id")
+	derr := h.User.Delete(ctx, claim, id);
+	if derr != nil {
+		switch {
+		case errors.Is(err, user.ErrInvalidID):
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		default:
+			return fmt.Errorf("ID[%s]: %w", id, err)
+		}
+	}
+		return web.Respond(ctx, w, user.User{}, http.StatusAccepted)
+}
