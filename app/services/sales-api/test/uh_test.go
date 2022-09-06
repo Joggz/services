@@ -48,6 +48,7 @@ func Test_Users(t *testing.T) {
 
 
 	t.Run("getToken200", tests.getToken200)
+	t.Run("getToken404", tests.getToken404)
 }
 
 func (ut *UserTest) getToken200 (t *testing.T){
@@ -78,5 +79,29 @@ func (ut *UserTest) getToken200 (t *testing.T){
 			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response.", dbtest.Success, testID)
 
 		}
+	}
+}
+
+
+func (ut *UserTest) getToken404(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/users/token", nil)
+	w := httptest.NewRecorder()
+
+	t.Log("Given the need to issues tokens to known users.", w.Result())
+
+
+	r.SetBasicAuth("unknown@example.com", "gophamint")
+	ut.app.ServeHTTP(w, r)
+
+	{
+		testID := 0
+		t.Logf("\tTest %d:\tWhen fetching a token with an unrecognized email.", testID, )
+		{
+			if w.Code != http.StatusNotFound {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 404 for the response : %v", dbtest.Failed, testID, w.Code)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", dbtest.Success, testID)
+		}
+
 	}
 }
