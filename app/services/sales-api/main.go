@@ -194,7 +194,7 @@ func run(log *zap.SugaredLogger) error {
 			Log:      log,
 			Auth:    auth,
 			DB:       db,
-		}, log)
+		})
 
 		// Construct a server to service the requests against the mux.
 	api := http.Server{

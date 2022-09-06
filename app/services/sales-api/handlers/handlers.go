@@ -9,7 +9,9 @@ import (
 
 	// "github.com/dimfeld/httptreemux/v5"
 	"github.com/Joggz/services/app/services/sales-api/handlers/debug/checkgrp"
-	"github.com/Joggz/services/app/services/sales-api/handlers/v1/testgrp"
+	"github.com/Joggz/services/app/services/sales-api/handlers/v1/usrgrp"
+
+	"github.com/Joggz/services/business/data/store/user"
 	"github.com/Joggz/services/business/web/auth"
 	"github.com/Joggz/services/business/web/mid"
 	"github.com/Joggz/services/foundation/web"
@@ -66,7 +68,7 @@ type APIMuxConfig struct {
 
 
 // APIMux constructs a http.Handler with all application routes defined.
-func APIMux(cfg APIMuxConfig, log *zap.SugaredLogger ) *web.App  {
+func APIMux(cfg APIMuxConfig ) *web.App  {
 	app := web.NewApp(cfg.Shutdown, 
 		mid.Logger(cfg.Log),
 		mid.Error(cfg.Log),
@@ -83,9 +85,14 @@ func APIMux(cfg APIMuxConfig, log *zap.SugaredLogger ) *web.App  {
 func v1(app *web.App, cfg APIMuxConfig) {
 	const version = "v1";
 
-	tgh :=  testgrp.Handlers{
-		Log: cfg.Log,
-	}
+	// tgh :=  testgrp.Handlers{
+	// 	Log: cfg.Log,
+	// }
 
-	app.Handle(http.MethodGet, version, "/test", tgh.Test)
+	ugh := usrgrp.Handlers{
+		User: user.NewStore(cfg.Log, cfg.DB),
+		Auth: cfg.Auth,
+	}
+	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
 }
+
