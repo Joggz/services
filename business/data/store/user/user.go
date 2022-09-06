@@ -261,7 +261,7 @@ func (s Store) Authenticate(ctx context.Context, now time.Time, email string, pa
 		Email: email,
 	}
 
-	const q = ` SELECT * FROM user WHERE email= :email`
+	const q = ` SELECT * FROM users WHERE email= :email`
 	var usr User 
 
 	if err := database.NamedQueryStruct(ctx,s.log,s.db, q, data, &usr); err != nil{

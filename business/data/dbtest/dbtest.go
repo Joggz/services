@@ -4,15 +4,22 @@ package dbtest
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"fmt"
 	"io"
 	"os"
+
+	// "os/user"
 	"testing"
 	"time"
 
 	"github.com/Joggz/services/business/data/dbschema"
+	"github.com/Joggz/services/business/data/store/user"
 	"github.com/Joggz/services/business/sys/database"
+	"github.com/Joggz/services/business/web/auth"
 	"github.com/Joggz/services/foundation/docker"
+	"github.com/Joggz/services/foundation/keystore"
 	"github.com/Joggz/services/foundation/logger"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -95,6 +102,63 @@ func NewUnit(t *testing.T, dbc DBContainer)(*zap.SugaredLogger, *sqlx.DB, func()
 	}
 	return log, db, teardown
 }
+
+// Test owns state for running and shutting down tests.
+type Test struct {
+	DB       *sqlx.DB
+	Log      *zap.SugaredLogger
+	Auth     *auth.Auth
+	Teardown func()
+
+	t *testing.T
+}
+
+
+// NewIntegration creates a database, seeds it, constructs an authenticator.
+func NewIntegration(t *testing.T, dbc DBContainer) *Test {
+	log, db, teardown := NewUnit(t, dbc)
+
+		// Create RSA keys to enable authentication in our service.
+		keyID := "4754d86b-7a6d-4df5-9c65-224741361492"
+		privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			t.Fatal(err)
+		}
+	
+		// Build an authenticator using this private key and id for the key store.
+		auth, err := auth.New(keyID, keystore.NewMap(map[string]*rsa.PrivateKey{keyID: privateKey}))
+		if err != nil {
+			t.Fatal(err)
+		}
+	
+	test := Test{
+		DB:   db,
+		Log:  log,
+		Auth: auth,
+		Teardown: teardown,
+		t: t,
+	}
+	return &test
+}
+
+// Token generates an authenticated token for a user.
+func (test *Test) Token(email, pass string) string {
+	test.t.Log("Generating token for test ...")
+
+	store := user.NewStore(test.Log, test.DB)
+	claim, err :=	store.Authenticate(context.Background(), time.Now(), email, pass)
+	if err != nil {
+	test.t.Fatal(err)
+	}
+
+	token, err := test.Auth.GenerateToken(claim)
+	if err != nil {
+		test.t.Fatal(err)
+	}
+
+	return token
+}
+
 
 func StringPointer(s string) *string {
 	return &s
