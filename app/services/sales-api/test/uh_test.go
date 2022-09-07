@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/Joggz/services/app/services/sales-api/handlers"
@@ -53,6 +54,8 @@ func Test_Users(t *testing.T) {
 
 	t.Run("getToken200", tests.getToken200)
 	t.Run("getToken404", tests.getToken404)
+	t.Run("getUser404", tests.getUser404)
+	
 }
 
 func (ut *UserTest) getToken200 (t *testing.T){
@@ -114,5 +117,38 @@ func (ut *UserTest) getToken404(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", dbtest.Success, testID)
 		}
 
+	}
+}
+
+
+// getUser404 validates a user request for a user that does not exist with the endpoint.
+func (ut *UserTest) getUser404(t *testing.T){
+	id := "c50a5d66-3c4d-453f-af3f-bc960ed1a50"
+
+	r := httptest.NewRequest(http.MethodGet, "/users/"+id, nil)
+	w := httptest.NewRecorder()
+	
+	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
+	ut.app.ServeHTTP(w, r)
+
+	t.Log("Given the need to validate getting a user with an unknown id.", w)
+
+	{
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new user %s.", testID, id)
+		{
+			if w.Code != http.StatusNotFound {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 404 for the response : %v", dbtest.Failed, testID, w.Code)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", dbtest.Success, testID)
+			got := w.Body.String()
+			exp := "not found"
+			if !strings.Contains(got, exp) {
+				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", dbtest.Failed, testID)
+			}
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", dbtest.Success, testID)
+		}
 	}
 }

@@ -94,5 +94,5 @@ func v1(app *web.App, cfg APIMuxConfig) {
 		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
+	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID)
 }
-
