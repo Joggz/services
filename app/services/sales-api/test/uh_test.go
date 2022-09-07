@@ -9,6 +9,7 @@ import (
 
 	"github.com/Joggz/services/app/services/sales-api/handlers"
 	"github.com/Joggz/services/business/data/dbtest"
+	"github.com/Joggz/services/business/web/auth"
 )
 
 // UserTests holds methods for each user subtest. This type allows passing
@@ -18,6 +19,7 @@ type UserTest  struct {
 	app http.Handler
 	userToken string
 	adminToken string
+	auth  *auth.Auth
 }
 
 
@@ -29,6 +31,7 @@ func Test_Users(t *testing.T) {
 		Port:  "5432",
 		Args:  []string{"-e", "POSTGRES_PASSWORD=password"},
 	} )
+
 
 	t.Cleanup(test.Teardown)
 
@@ -44,6 +47,7 @@ func Test_Users(t *testing.T) {
 		}),
 		userToken:  test.Token("user@example.com", "gophers"),
 		adminToken: test.Token("admin@example.com", "gophers"),
+		auth: test.Auth,
 	}
 
 
@@ -77,6 +81,13 @@ func (ut *UserTest) getToken200 (t *testing.T){
 			t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response.", dbtest.Success, testID)
+
+		_, err :=	ut.auth.ValidateToken(got.Token)
+		if err != nil {
+			t.Fatalf("\t%s\tTest %d:\tShould be able to validate token from the response : %v", dbtest.Failed, testID, err)
+		}
+		t.Logf("\t%s\tTest %d:\tShould be able to validate token from the response.", dbtest.Success, testID)
+
 
 		}
 	}
